@@ -158,7 +158,12 @@ defmodule Airtable do
   end
 
   def make_request(:list, api_key, table_key, table_name, options) do
-    query = URI.encode_query(query_for_fields(options[:fields]))
+    # shamelessly copied from https://github.com/Overbryd/elixir_airtable_client/blob/master/lib/airtable.ex#L196-L216
+    query_params =  query_for_fields(options[:fields]) ++
+      query_for_filter_by_formula(options[:filter_by_formula])
+
+    query = URI.encode_query(query_params)
+
     url =
       make_url(table_key, table_name)
       |> URI.parse()
@@ -187,6 +192,11 @@ defmodule Airtable do
   defp query_for_fields(nil) do
     []
   end
+
+  # shamelessly copied from https://github.com/Overbryd/elixir_airtable_client/blob/master/lib/airtable.ex#L252-L254
+  defp query_for_filter_by_formula(nil), do: []
+
+  defp query_for_filter_by_formula(formula) when is_binary(formula), do: [{"filterByFormula", formula}]
 
   defp make_headers(api_key) when is_binary(api_key) do
     [
